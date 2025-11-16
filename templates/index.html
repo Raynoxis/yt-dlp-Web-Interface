@@ -377,6 +377,8 @@
             const outputContainer = document.getElementById('outputContainer');
             const outputContainerGroup = document.getElementById('outputContainerGroup');
             const outputLabel = outputContainerGroup.querySelector('label');
+            const audioCodec = document.getElementById('audioCodec');
+            const audioCodecLabel = audioCodec.previousElementSibling;
             
             if (audioOnly) {
                 // Griser le format vidéo
@@ -385,13 +387,23 @@
                 videoFormat.style.cursor = 'not-allowed';
                 videoLabel.style.opacity = '0.5';
                 
-                // Passer automatiquement à un format audio
-                if (!['m4a', 'mp3'].includes(outputContainer.value)) {
-                    outputContainer.value = 'm4a';
-                }
+                // Adapter le conteneur pour formats audio seulement
+                outputContainer.innerHTML = `
+                    <option value="mp3" selected>MP3</option>
+                    <option value="m4a">M4A/AAC</option>
+                    <option value="opus">Opus</option>
+                    <option value="flac">FLAC</option>
+                    <option value="wav">WAV</option>
+                    <option value="best">Best (auto)</option>
+                `;
+                outputLabel.innerHTML = 'Format Audio de sortie';
                 
-                // Griser aussi le conteneur (optionnel, mais on garde le choix)
-                outputLabel.innerHTML = 'Format de sortie (Audio)';
+                // Le codec devient moins pertinent en mode audio-only (géré par --audio-format)
+                audioCodec.disabled = true;
+                audioCodec.style.opacity = '0.5';
+                audioCodec.style.cursor = 'not-allowed';
+                audioCodecLabel.style.opacity = '0.5';
+                audioCodecLabel.innerHTML = 'Codec Audio (géré par format)';
             } else {
                 // Réactiver le format vidéo
                 videoFormat.disabled = false;
@@ -399,14 +411,24 @@
                 videoFormat.style.cursor = 'pointer';
                 videoLabel.style.opacity = '1';
                 
-                // Rétablir le label normal
+                // Rétablir les conteneurs vidéo
+                outputContainer.innerHTML = `
+                    <option value="mp4" selected>MP4</option>
+                    <option value="mkv">MKV</option>
+                    <option value="webm">WebM</option>
+                `;
                 outputLabel.innerHTML = 'Conteneur';
                 
-                // Si un format audio était sélectionné, revenir à mp4
-                if (['m4a', 'mp3'].includes(outputContainer.value)) {
-                    outputContainer.value = 'mp4';
-                }
+                // Réactiver le codec audio
+                audioCodec.disabled = false;
+                audioCodec.style.opacity = '1';
+                audioCodec.style.cursor = 'pointer';
+                audioCodecLabel.style.opacity = '1';
+                audioCodecLabel.innerHTML = 'Codec Audio';
             }
+            
+            // Toujours permettre le contrôle du bitrate
+            toggleBitrateInput();
         }
 
         function toggleBitrateInput() {

@@ -152,27 +152,43 @@ def download_video():
         output_template = str(DOWNLOAD_DIR / f'%(title)s_{timestamp}.%(ext)s')
         
         # Construction de la commande yt-dlp
-        cmd = [
-            'yt-dlp',
-            '-f', format_string,
-            '--merge-output-format', output_container,
-            '-o', output_template
-        ]
+        cmd = ['yt-dlp', '-f', format_string, '-o', output_template]
         
-        # Pour l'audio seulement, on peut aussi extraire l'audio
-        if audio_only and output_container in ['mp3', 'm4a']:
-            cmd.extend(['-x', '--audio-format', output_container.replace('m4a', 'aac')])
-        
-        # Ajout des arguments de post-processing pour l'audio
-        postproc_added = False
-        if audio_codec and audio_codec != 'copy' and not (audio_only and output_container in ['mp3', 'm4a']):
-            postproc_args = f"-c:a {audio_codec}"
-            if audio_bitrate:
-                postproc_args += f" -b:a {audio_bitrate}"
-            cmd.extend(['--postprocessor-args', f'ffmpeg:{postproc_args}'])
-            postproc_added = True
-        # Si copy est sélectionné, on ne réencode pas du tout
-        # Le bitrate est ignoré car on ne peut pas changer le bitrate sans réencoder
+        # Pour l'audio seulement, utiliser -x pour extraction
+        if audio_only:
+            cmd.extend(['-x'])  # Extraire l'audio
+            
+            # Spécifier le format audio de sortie
+            if output_container == 'mp3':
+                cmd.extend(['--audio-format', 'mp3'])
+            elif output_container == 'm4a':
+                cmd.extend(['--audio-format', 'm4a'])
+            else:
+                cmd.extend(['--audio-format', 'best'])
+            
+            # Gérer la qualité audio
+            if audio_codec == 'copy':
+                # En mode copy, utiliser la meilleure qualité (0)
+                cmd.extend(['--audio-quality', '0'])
+            else:
+                # Convertir le bitrate en format approprié pour --audio-quality
+                # --audio-quality accepte soit 0-10 (VBR) soit un bitrate spécifique comme "128K"
+                if audio_bitrate:
+                    cmd.extend(['--audio-quality', audio_bitrate.upper()])  # Ex: "192K"
+                else:
+                    cmd.extend(['--audio-quality', '0'])  # Meilleure qualité par défaut
+                postproc_added = True
+        else:
+            # Mode vidéo + audio : utiliser merge-output-format
+            cmd.extend(['--merge-output-format', output_container])
+            
+            # Ajout des arguments de post-processing pour l'audio
+            if audio_codec and audio_codec != 'copy':
+                postproc_args = f"-c:a {audio_codec}"
+                if audio_bitrate:
+                    postproc_args += f" -b:a {audio_bitrate}"
+                cmd.extend(['--postprocessor-args', f'ffmpeg:{postproc_args}'])
+                postproc_added = True
         
         # Ajout de l'URL à la fin
         cmd.append(url)
@@ -190,7 +206,12 @@ def download_video():
             }), 400
         
         # Recherche du fichier téléchargé
-        downloaded_files = list(DOWNLOAD_DIR.glob(f'*.{output_container}'))
+        if audio_only and output_container in ['mp3', 'm4a']:
+            # Chercher spécifiquement les fichiers audio
+            downloaded_files = list(DOWNLOAD_DIR.glob(f'*.{output_container}'))
+        else:
+            downloaded_files = list(DOWNLOAD_DIR.glob(f'*.{output_container}'))
+        
         if not downloaded_files:
             downloaded_files = list(DOWNLOAD_DIR.glob('*'))
         
