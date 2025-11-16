@@ -123,19 +123,28 @@ def download_video():
         output_container = data.get('output_container', 'mp4')
         audio_codec = data.get('audio_codec', 'aac')
         audio_bitrate = data.get('audio_bitrate', '192k')
+        audio_only = data.get('audio_only', False)
         
         if not url:
             return jsonify({'error': 'URL manquante'}), 400
         
         # Construction de la chaîne de format
-        if video_format and audio_format:
-            format_string = f"{video_format}+{audio_format}"
-        elif video_format:
-            format_string = f"{video_format}+ba"
-        elif audio_format:
-            format_string = f"bv+{audio_format}"
+        if audio_only:
+            # Mode audio seulement
+            if audio_format:
+                format_string = audio_format
+            else:
+                format_string = "ba/best"
         else:
-            format_string = "bv+ba/best"
+            # Mode vidéo + audio
+            if video_format and audio_format:
+                format_string = f"{video_format}+{audio_format}"
+            elif video_format:
+                format_string = f"{video_format}+ba"
+            elif audio_format:
+                format_string = f"bv+{audio_format}"
+            else:
+                format_string = "bv+ba/best"
         
         # Nom de fichier sécurisé avec timestamp pour éviter les conflits
         import time
@@ -150,9 +159,13 @@ def download_video():
             '-o', output_template
         ]
         
+        # Pour l'audio seulement, on peut aussi extraire l'audio
+        if audio_only and output_container in ['mp3', 'm4a']:
+            cmd.extend(['-x', '--audio-format', output_container.replace('m4a', 'aac')])
+        
         # Ajout des arguments de post-processing pour l'audio
         postproc_added = False
-        if audio_codec and audio_codec != 'copy':
+        if audio_codec and audio_codec != 'copy' and not (audio_only and output_container in ['mp3', 'm4a']):
             postproc_args = f"-c:a {audio_codec}"
             if audio_bitrate:
                 postproc_args += f" -b:a {audio_bitrate}"
@@ -199,7 +212,8 @@ def download_video():
             'format_used': format_string,
             'postproc_applied': postproc_added,
             'audio_codec': audio_codec if audio_codec != 'copy' else 'original (copy)',
-            'audio_bitrate': audio_bitrate if audio_codec != 'copy' else 'original'
+            'audio_bitrate': audio_bitrate if audio_codec != 'copy' else 'original',
+            'audio_only': audio_only
         })
         
     except subprocess.TimeoutExpired:

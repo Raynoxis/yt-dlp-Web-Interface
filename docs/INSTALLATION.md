@@ -10,32 +10,32 @@
 
 ### 1. Via Docker Hub
 ```bash
-docker pull votreusername/ytdlp-web:latest
-docker run -d -p 5000:5000 --name ytdlp-web votreusername/ytdlp-web:latest
+docker pull raynoxis/yt-dlp-web-interface:latest
+docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### 2. Build depuis les sources
 ```bash
-git clone https://github.com/votreusername/yt-dlp-web.git
-cd yt-dlp-web
-docker build -t ytdlp-web .
-docker run -d -p 5000:5000 --name ytdlp-web ytdlp-web
+git clone https://github.com/Raynoxis/yt-dlp-Web-Interface.git
+cd yt-dlp-Web-Interface
+docker build -t raynoxis/yt-dlp-web-interface .
+docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 ```
 
 ## Installation avec Podman
 
 ### 1. Via registre
 ```bash
-podman pull votreusername/ytdlp-web:latest
-podman run -d -p 5000:5000 --name ytdlp-web votreusername/ytdlp-web:latest
+podman pull raynoxis/yt-dlp-web-interface:latest
+podman run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### 2. Build depuis les sources
 ```bash
-git clone https://github.com/votreusername/yt-dlp-web.git
-cd yt-dlp-web
-podman build -t ytdlp-web .
-podman run -d -p 5000:5000 --name ytdlp-web ytdlp-web
+git clone https://github.com/Raynoxis/yt-dlp-Web-Interface.git
+cd yt-dlp-Web-Interface
+podman build -t raynoxis/yt-dlp-web-interface .
+podman run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 ```
 
 ## Configuration avancée
@@ -47,7 +47,7 @@ docker run -d \
   -p 5000:5000 \
   -v ~/ytdlp-downloads:/app/downloads:Z \
   --name ytdlp-web \
-  votreusername/ytdlp-web:latest
+  raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### Avec Docker Compose
@@ -70,7 +70,7 @@ docker logs ytdlp-web
 
 Changez le port :
 ```bash
-docker run -d -p 8080:5000 --name ytdlp-web votreusername/ytdlp-web:latest
+docker run -d -p 8080:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### Permissions SELinux

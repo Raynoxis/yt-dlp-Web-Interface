@@ -21,20 +21,20 @@ Interface web moderne pour télécharger des vidéos YouTube avec [yt-dlp](https
 
 ### Avec Docker
 ```bash
-docker pull votreusername/ytdlp-web:latest
-docker run -d -p 5000:5000 --name ytdlp-web votreusername/ytdlp-web:latest
+docker pull raynoxis/yt-dlp-web-interface:latest
+docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### Avec Podman
 ```bash
-podman pull votreusername/ytdlp-web:latest
-podman run -d -p 5000:5000 --name ytdlp-web votreusername/ytdlp-web:latest
+podman pull raynoxis/yt-dlp-web-interface:latest
+podman run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### Avec Docker Compose
 ```bash
-git clone https://github.com/votreusername/yt-dlp-web.git
-cd yt-dlp-web
+git clone https://github.com/Raynoxis/yt-dlp-Web-Interface.git
+cd yt-dlp-Web-Interface
 docker-compose up -d
 ```
 
@@ -48,17 +48,17 @@ Accédez à l'interface : **http://localhost:5000**
 ## 🛠️ Build depuis les sources
 ```bash
 # Cloner le repo
-git clone https://github.com/votreusername/yt-dlp-web.git
-cd yt-dlp-web
+git clone https://github.com/Raynoxis/yt-dlp-Web-Interface.git
+cd yt-dlp-Web-Interface
 
 # Build avec Docker
-docker build -t ytdlp-web .
+docker build -t raynoxis/yt-dlp-web-interface .
 
 # Ou avec Podman
-podman build -t ytdlp-web .
+podman build -t raynoxis/yt-dlp-web-interface .
 
 # Lancer
-docker run -d -p 5000:5000 --name ytdlp-web ytdlp-web
+docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 ```
 
 ## 🎯 Utilisation
@@ -83,7 +83,7 @@ docker run -d \
   -p 5000:5000 \
   -v ./downloads:/app/downloads \
   --name ytdlp-web \
-  votreusername/ytdlp-web:latest
+  raynoxis/yt-dlp-web-interface:latest
 ```
 
 ### Variables d'environnement
@@ -92,7 +92,7 @@ docker run -d \
   -p 5000:5000 \
   -e FLASK_ENV=production \
   --name ytdlp-web \
-  votreusername/ytdlp-web:latest
+  raynoxis/yt-dlp-web-interface:latest
 ```
 
 ## 🤝 Contribution
@@ -119,3 +119,10 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 Cet outil est destiné à un usage personnel et éducatif. Respectez les conditions d'utilisation de YouTube et les lois sur le droit d'auteur de votre pays.
 
+## 📧 Contact
+
+Raynoxis - [GitHub](https://github.com/Raynoxis)
+
+Lien du projet: [https://github.com/Raynoxis/yt-dlp-Web-Interface](https://github.com/Raynoxis/yt-dlp-Web-Interface)
+
+Lien Docker Hub: [https://hub.docker.com/r/raynoxis/yt-dlp-web-interface](https://hub.docker.com/r/raynoxis/yt-dlp-web-interface)

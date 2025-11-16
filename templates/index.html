@@ -80,10 +80,22 @@
             transition: border-color 0.3s;
         }
 
+        input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
         input[type="text"]:focus,
         select:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        input[type="text"]:disabled,
+        select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f5f5f5;
         }
 
         .btn {
@@ -281,8 +293,16 @@
             <div class="formats-section" id="formatsSection">
                 <div class="section">
                     <div class="section-title">📹 Sélection des formats</div>
+                    
+                    <div class="input-group">
+                        <label>
+                            <input type="checkbox" id="audioOnlyMode" onchange="toggleAudioOnlyMode()">
+                            🎵 Mode Audio Seulement
+                        </label>
+                    </div>
+                    
                     <div class="format-row">
-                        <div class="input-group">
+                        <div class="input-group" id="videoFormatGroup">
                             <label for="videoFormat">Format Vidéo</label>
                             <select id="videoFormat">
                                 <option value="">Meilleure qualité auto</option>
@@ -300,12 +320,14 @@
                 <div class="section">
                     <div class="section-title">⚙️ Options de sortie</div>
                     <div class="output-options">
-                        <div class="input-group">
+                        <div class="input-group" id="outputContainerGroup">
                             <label for="outputContainer">Conteneur</label>
                             <select id="outputContainer">
                                 <option value="mp4" selected>MP4</option>
                                 <option value="mkv">MKV</option>
                                 <option value="webm">WebM</option>
+                                <option value="m4a">M4A (Audio)</option>
+                                <option value="mp3">MP3 (Audio)</option>
                             </select>
                         </div>
                         <div class="input-group">
@@ -346,6 +368,46 @@
 
     <script>
         let currentFilename = '';
+
+        function toggleAudioOnlyMode() {
+            const audioOnly = document.getElementById('audioOnlyMode').checked;
+            const videoFormatGroup = document.getElementById('videoFormatGroup');
+            const videoFormat = document.getElementById('videoFormat');
+            const videoLabel = videoFormatGroup.querySelector('label');
+            const outputContainer = document.getElementById('outputContainer');
+            const outputContainerGroup = document.getElementById('outputContainerGroup');
+            const outputLabel = outputContainerGroup.querySelector('label');
+            
+            if (audioOnly) {
+                // Griser le format vidéo
+                videoFormat.disabled = true;
+                videoFormat.style.opacity = '0.5';
+                videoFormat.style.cursor = 'not-allowed';
+                videoLabel.style.opacity = '0.5';
+                
+                // Passer automatiquement à un format audio
+                if (!['m4a', 'mp3'].includes(outputContainer.value)) {
+                    outputContainer.value = 'm4a';
+                }
+                
+                // Griser aussi le conteneur (optionnel, mais on garde le choix)
+                outputLabel.innerHTML = 'Format de sortie (Audio)';
+            } else {
+                // Réactiver le format vidéo
+                videoFormat.disabled = false;
+                videoFormat.style.opacity = '1';
+                videoFormat.style.cursor = 'pointer';
+                videoLabel.style.opacity = '1';
+                
+                // Rétablir le label normal
+                outputLabel.innerHTML = 'Conteneur';
+                
+                // Si un format audio était sélectionné, revenir à mp4
+                if (['m4a', 'mp3'].includes(outputContainer.value)) {
+                    outputContainer.value = 'mp4';
+                }
+            }
+        }
 
         function toggleBitrateInput() {
             const audioCodec = document.getElementById('audioCodec').value;
@@ -443,7 +505,8 @@
 
         async function downloadVideo() {
             const url = document.getElementById('url').value.trim();
-            const videoFormat = document.getElementById('videoFormat').value;
+            const audioOnly = document.getElementById('audioOnlyMode').checked;
+            const videoFormat = audioOnly ? '' : document.getElementById('videoFormat').value;
             const audioFormat = document.getElementById('audioFormat').value;
             const outputContainer = document.getElementById('outputContainer').value;
             const audioCodec = document.getElementById('audioCodec').value;
@@ -464,7 +527,8 @@
                         audio_format: audioFormat,
                         output_container: outputContainer,
                         audio_codec: audioCodec,
-                        audio_bitrate: audioBitrate
+                        audio_bitrate: audioBitrate,
+                        audio_only: audioOnly
                     })
                 });
 
@@ -481,6 +545,7 @@
                     <strong>✅ Téléchargement terminé !</strong><br>
                     Fichier: ${data.filename}<br>
                     Taille: ${sizeMB} MB<br>
+                    ${data.audio_only ? '🎵 Mode: Audio seulement<br>' : ''}
                     Format utilisé: ${data.format_used}<br>
                     Codec audio: ${data.audio_codec}<br>
                     Bitrate audio: ${data.audio_bitrate}<br>
