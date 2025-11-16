@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  ytdlp-web:
+    build: .
+    container_name: ytdlp-web
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

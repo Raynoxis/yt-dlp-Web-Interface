@@ -1,0 +1,15 @@
+.git
+.gitignore
+*.md
+downloads/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+.env
+docker-compose.yml
+LICENSE
+docs/
+*.mp4
+*.mkv
+*.webm
