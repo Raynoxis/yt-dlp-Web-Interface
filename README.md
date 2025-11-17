@@ -1,6 +1,6 @@
 # 🎬 yt-dlp Web Interface
 
-Interface web moderne pour télécharger des vidéos YouTube avec [yt-dlp](https://github.com/yt-dlp/yt-dlp), conteneurisée avec Docker/Podman.
+Interface web pour télécharger des vidéos YouTube, avec options de conversion et affichage détaillé. Utilise l'excellent [yt-dlp](https://github.com/yt-dlp/yt-dlp). Le tout conteneurisé avec Docker/Podman. Codé avec mon ami : Claude AI
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
@@ -71,9 +71,13 @@ docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 6. Téléchargez le fichier généré
 
 ## 📸 Screenshots
-
+### Etape 1
 ![Etape 1](docs/screenshots/step1.png)
+
+### Etape 2
 ![Etape 2](docs/screenshots/step2.png)
+
+### Etape 3
 ![Etape 3](docs/screenshots/step3.png)
 
 ## 🔧 Configuration avancée
