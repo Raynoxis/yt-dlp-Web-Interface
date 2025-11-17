@@ -72,8 +72,9 @@ docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 
 ## 📸 Screenshots
 
-![Interface principale](docs/screenshots/main.png)
-![Sélection des formats](docs/screenshots/formats.png)
+![Etape 1](docs/screenshots/step1.png)
+![Etape 2](docs/screenshots/step2.png)
+![Etape 3](docs/screenshots/step3.png)
 
 ## 🔧 Configuration avancée
 
@@ -94,6 +95,31 @@ docker run -d \
   --name ytdlp-web \
   raynoxis/yt-dlp-web-interface:latest
 ```
+
+### Compose
+```bash
+version: '3.8'
+
+services:
+  ytdlp-webinterface:
+    image: raynoxis/yt-dlp-web-interface:latest
+    container_name: ytdlp-webinterface
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
 
 ## 🤝 Contribution
 
