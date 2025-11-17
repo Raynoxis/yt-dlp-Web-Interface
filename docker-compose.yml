@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  ytdlp-web:
-    build: .
+  ytdlp-webinterface:
+    image: raynoxis/yt-dlp-web-interface:latest
     container_name: ytdlp-webinterface
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./downloads:/app/downloads
     restart: unless-stopped
