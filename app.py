@@ -290,6 +290,9 @@ def download_video():
         # Ajout de l'URL à la fin
         cmd.append(url)
 
+        # Conversion de la commande en string pour affichage
+        cmd_string = ' '.join(f'"{arg}"' if ' ' in arg else arg for arg in cmd)
+
         logger.info(f"Executing download command for session {session_id}")
 
         # Exécution du téléchargement
@@ -322,6 +325,7 @@ def download_video():
             'session_id': session_id,
             'filename': latest_file.name,
             'size': latest_file.stat().st_size,
+            'command': cmd_string,
             'format_used': format_string,
             'postproc_applied': postproc_added,
             'audio_codec': audio_codec if audio_codec != 'copy' else 'original (copy)',
