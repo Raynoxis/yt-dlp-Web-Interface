@@ -368,6 +368,7 @@
 
     <script>
         let currentFilename = '';
+        let currentSessionId = '';
 
         function toggleAudioOnlyMode() {
             const audioOnly = document.getElementById('audioOnlyMode').checked;
@@ -561,8 +562,9 @@
                 }
 
                 currentFilename = data.filename;
+                currentSessionId = data.session_id;
                 const sizeMB = (data.size / (1024 * 1024)).toFixed(2);
-                
+
                 document.getElementById('downloadInfo').innerHTML = `
                     <strong>✅ Téléchargement terminé !</strong><br>
                     Fichier: ${data.filename}<br>
@@ -573,10 +575,9 @@
                     Bitrate audio: ${data.audio_bitrate}<br>
                     Post-processing: ${data.postproc_applied ? 'Oui' : 'Non (copy direct)'}
                 `;
-                
+
                 document.getElementById('commandDisplay').innerHTML = `
-                    <div class="command-label">📋 Commande exécutée :</div>
-                    ${data.command}
+                    <div class="command-label">✅ Téléchargement prêt</div>
                 `;
                 
                 document.getElementById('downloadSection').style.display = 'block';
@@ -590,8 +591,8 @@
         }
 
         function downloadFile() {
-            if (currentFilename) {
-                window.location.href = `/api/download-file/${encodeURIComponent(currentFilename)}`;
+            if (currentFilename && currentSessionId) {
+                window.location.href = `/api/download-file/${encodeURIComponent(currentSessionId)}/${encodeURIComponent(currentFilename)}`;
             }
         }
 

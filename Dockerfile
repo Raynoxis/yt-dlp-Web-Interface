@@ -4,6 +4,7 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     wget \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Installation de yt-dlp
@@ -11,15 +12,22 @@ RUN wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /us
     && chmod +x /usr/local/bin/yt-dlp
 
 # Installation de Flask
-RUN pip install --no-cache-dir flask flask-cors
+RUN pip install --no-cache-dir flask
+
+# Création d'un utilisateur non-root
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/downloads /app/templates && \
+    chown -R appuser:appuser /app
 
 # Création des répertoires
 WORKDIR /app
-RUN mkdir -p /app/downloads /app/templates
 
 # Copie des fichiers de l'application
-COPY app.py /app/
-COPY templates/index.html /app/templates/
+COPY --chown=appuser:appuser app.py /app/
+COPY --chown=appuser:appuser templates/index.html /app/templates/
+
+# Passer à l'utilisateur non-root
+USER appuser
 
 # Exposition du port
 EXPOSE 5000
