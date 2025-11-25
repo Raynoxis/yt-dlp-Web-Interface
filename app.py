@@ -36,7 +36,7 @@ VALID_CONTAINERS = {'mp4', 'mkv', 'webm', 'm4a', 'mp3'}
 VALID_AUDIO_CODECS = {'aac', 'mp3', 'opus', 'copy'}
 
 # Stockage des sessions de téléchargement pour le suivi de progression
-download_sessions = {}
+download_sessions = {}  # {session_id: {'progress': 0, 'status': 'downloading', 'eta': '', 'speed': ''}}
 download_lock = threading.Lock()
 
 
@@ -188,6 +188,146 @@ def analyze_video():
         return jsonify({'error': 'Erreur serveur'}), 500
 
 
+@app.route('/api/progress/<session_id>')
+def progress_stream(session_id):
+    """Stream de progression via Server-Sent Events"""
+    def generate():
+        # Attendre que la session soit créée (max 5 secondes)
+        wait_count = 0
+        while wait_count < 10:
+            with download_lock:
+                if session_id in download_sessions:
+                    break
+            time.sleep(0.5)
+            wait_count += 1
+
+        # Streamer la progression
+        while True:
+            with download_lock:
+                session_data = download_sessions.get(session_id, {})
+
+            if not session_data:
+                yield f"data: {json.dumps({'progress': 0, 'status': 'waiting'})}\n\n"
+            else:
+                yield f"data: {json.dumps(session_data)}\n\n"
+
+                # Arrêter le stream si terminé ou erreur
+                if session_data.get('status') in ['completed', 'error']:
+                    break
+
+            time.sleep(0.5)  # Mise à jour toutes les 0.5 secondes
+
+    return Response(generate(), mimetype='text/event-stream')
+
+
+def _do_download_with_progress(session_id, cmd, session_dir, output_container, audio_only,
+                                cmd_string, format_string, postproc_added, audio_codec, audio_bitrate):
+    """Fonction helper pour télécharger avec suivi de progression"""
+    try:
+        # Initialiser la session
+        with download_lock:
+            download_sessions[session_id] = {
+                'progress': 0,
+                'status': 'downloading',
+                'eta': '',
+                'speed': ''
+            }
+
+        # Ajouter --newline pour avoir des mises à jour ligne par ligne
+        cmd_with_progress = cmd + ['--newline']
+
+        # Lancer yt-dlp et capturer la sortie en temps réel
+        process = subprocess.Popen(
+            cmd_with_progress,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+
+        # Parser la sortie ligne par ligne
+        for line in process.stdout:
+            # Extraire le pourcentage (format: "[download]  XX.X% of ...")
+            match = re.search(r'\[download\]\s+(\d+\.?\d*)%', line)
+            if match:
+                progress = float(match.group(1))
+
+                # Extraire ETA si disponible
+                eta_match = re.search(r'ETA\s+([\d:]+)', line)
+                eta = eta_match.group(1) if eta_match else ''
+
+                # Extraire vitesse si disponible
+                speed_match = re.search(r'at\s+([\d.]+\s*[KMG]iB/s)', line)
+                speed = speed_match.group(1) if speed_match else ''
+
+                with download_lock:
+                    download_sessions[session_id].update({
+                        'progress': min(progress, 99),  # Cap à 99% jusqu'à la fin
+                        'status': 'downloading',
+                        'eta': eta,
+                        'speed': speed
+                    })
+
+        process.wait()
+
+        if process.returncode != 0:
+            with download_lock:
+                download_sessions[session_id] = {
+                    'progress': 0,
+                    'status': 'error',
+                    'error': 'Erreur lors du téléchargement'
+                }
+            logger.error(f"Download failed for session {session_id}")
+            return
+
+        # Recherche du fichier téléchargé
+        if audio_only and output_container in ['mp3', 'm4a']:
+            downloaded_files = list(session_dir.glob(f'*.{output_container}'))
+        else:
+            downloaded_files = list(session_dir.glob(f'*.{output_container}'))
+
+        if not downloaded_files:
+            downloaded_files = list(session_dir.glob('*'))
+
+        if not downloaded_files:
+            with download_lock:
+                download_sessions[session_id] = {
+                    'progress': 0,
+                    'status': 'error',
+                    'error': 'Fichier téléchargé introuvable'
+                }
+            logger.error(f"No downloaded file found for session {session_id}")
+            return
+
+        latest_file = max(downloaded_files, key=lambda p: p.stat().st_mtime)
+
+        # Marquer comme terminé
+        with download_lock:
+            download_sessions[session_id] = {
+                'progress': 100,
+                'status': 'completed',
+                'filename': latest_file.name,
+                'size': latest_file.stat().st_size,
+                'command': cmd_string,
+                'format_used': format_string,
+                'postproc_applied': postproc_added,
+                'audio_codec': audio_codec if audio_codec != 'copy' else 'original (copy)',
+                'audio_bitrate': audio_bitrate if audio_codec != 'copy' else 'original',
+                'audio_only': audio_only
+            }
+
+        logger.info(f"Download successful for session {session_id}: {latest_file.name}")
+
+    except Exception as e:
+        with download_lock:
+            download_sessions[session_id] = {
+                'progress': 0,
+                'status': 'error',
+                'error': str(e)
+            }
+        logger.error(f"Error in download for session {session_id}: {e}", exc_info=True)
+
+
 @app.route('/api/download', methods=['POST'])
 def download_video():
     """Télécharge la vidéo avec les paramètres spécifiés"""
@@ -293,49 +433,25 @@ def download_video():
         # Conversion de la commande en string pour affichage
         cmd_string = ' '.join(f'"{arg}"' if ' ' in arg else arg for arg in cmd)
 
-        logger.info(f"Executing download command for session {session_id}")
+        logger.info(f"Starting download in background for session {session_id}")
 
-        # Exécution du téléchargement
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT_DOWNLOAD)
+        # Lancer le téléchargement dans un thread
+        download_thread = threading.Thread(
+            target=_do_download_with_progress,
+            args=(session_id, cmd, session_dir, output_container, audio_only,
+                  cmd_string, format_string, postproc_added, audio_codec, audio_bitrate),
+            daemon=True
+        )
+        download_thread.start()
 
-        if result.returncode != 0:
-            logger.error(f"Download failed for session {session_id}: {result.stderr}")
-            return jsonify({'error': 'Erreur lors du téléchargement'}), 400
-
-        # Recherche du fichier téléchargé dans le répertoire de session
-        if audio_only and output_container in ['mp3', 'm4a']:
-            downloaded_files = list(session_dir.glob(f'*.{output_container}'))
-        else:
-            downloaded_files = list(session_dir.glob(f'*.{output_container}'))
-
-        if not downloaded_files:
-            downloaded_files = list(session_dir.glob('*'))
-
-        if not downloaded_files:
-            logger.error(f"No downloaded file found for session {session_id}")
-            return jsonify({'error': 'Fichier téléchargé introuvable'}), 404
-
-        # Dernier fichier modifié
-        latest_file = max(downloaded_files, key=lambda p: p.stat().st_mtime)
-
-        logger.info(f"Download successful for session {session_id}: {latest_file.name}")
-
+        # Retourner immédiatement avec le session_id
+        # Le client se connectera au SSE pour suivre la progression
         return jsonify({
             'success': True,
             'session_id': session_id,
-            'filename': latest_file.name,
-            'size': latest_file.stat().st_size,
-            'command': cmd_string,
-            'format_used': format_string,
-            'postproc_applied': postproc_added,
-            'audio_codec': audio_codec if audio_codec != 'copy' else 'original (copy)',
-            'audio_bitrate': audio_bitrate if audio_codec != 'copy' else 'original',
-            'audio_only': audio_only
+            'message': 'Téléchargement démarré, utilisez /api/progress/<session_id> pour suivre la progression'
         })
 
-    except subprocess.TimeoutExpired:
-        logger.error(f"Download timeout for session {session_id}")
-        return jsonify({'error': 'Timeout lors du téléchargement'}), 408
     except Exception as e:
         logger.error(f"Unexpected error in download_video: {e}", exc_info=True)
         return jsonify({'error': 'Erreur serveur'}), 500

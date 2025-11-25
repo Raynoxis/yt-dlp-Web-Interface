@@ -253,6 +253,55 @@
             margin-bottom: 5px;
         }
 
+        .progress-section {
+            padding: 20px;
+            background: #eff6ff;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            margin-top: 20px;
+        }
+
+        .progress-section h3 {
+            margin: 0 0 15px 0;
+            color: #1e40af;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: #dbeafe;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+
+        .progress-info span {
+            padding: 5px 10px;
+            background: white;
+            border-radius: 5px;
+            margin: 0 5px;
+        }
+
         @media (max-width: 768px) {
             .format-row,
             .output-options {
@@ -354,6 +403,19 @@
                 <button class="btn btn-success" id="downloadBtn" onclick="downloadVideo()">
                     ⬇️ Télécharger
                 </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <h3>📥 Téléchargement en cours...</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="progress-info">
+                    <span id="progressPercent">0%</span>
+                    <span id="progressSpeed"></span>
+                    <span id="progressEta"></span>
+                </div>
             </div>
 
             <div class="download-section" id="downloadSection">
@@ -539,8 +601,10 @@
             downloadBtn.disabled = true;
             showLoading(true);
             document.getElementById('downloadSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'none';
 
             try {
+                // Démarrer le téléchargement
                 const response = await fetch('/api/download', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -561,31 +625,72 @@
                     throw new Error(data.error || 'Erreur lors du téléchargement');
                 }
 
-                currentFilename = data.filename;
+                // Récupérer le session_id et se connecter au SSE
                 currentSessionId = data.session_id;
-                const sizeMB = (data.size / (1024 * 1024)).toFixed(2);
+                showLoading(false);
+                document.getElementById('progressSection').style.display = 'block';
 
-                document.getElementById('downloadInfo').innerHTML = `
-                    <strong>✅ Téléchargement terminé !</strong><br>
-                    Fichier: ${data.filename}<br>
-                    Taille: ${sizeMB} MB<br>
-                    ${data.audio_only ? '🎵 Mode: Audio seulement<br>' : ''}
-                    Format utilisé: ${data.format_used}<br>
-                    Codec audio: ${data.audio_codec}<br>
-                    Bitrate audio: ${data.audio_bitrate}<br>
-                    Post-processing: ${data.postproc_applied ? 'Oui' : 'Non (copy direct)'}
-                `;
+                // Connexion SSE pour suivre la progression
+                const eventSource = new EventSource(`/api/progress/${currentSessionId}`);
 
-                document.getElementById('commandDisplay').innerHTML = `
-                    <div class="command-label">📋 Commande exécutée :</div>
-                    ${data.command}
-                `;
-                
-                document.getElementById('downloadSection').style.display = 'block';
-                showStatus('Vidéo téléchargée avec succès !', 'success');
+                eventSource.onmessage = function(event) {
+                    const progressData = JSON.parse(event.data);
+
+                    if (progressData.status === 'downloading') {
+                        // Mettre à jour la barre de progression
+                        const percent = Math.round(progressData.progress);
+                        document.getElementById('progressBar').style.width = percent + '%';
+                        document.getElementById('progressPercent').textContent = percent + '%';
+                        document.getElementById('progressSpeed').textContent = progressData.speed || '';
+                        document.getElementById('progressEta').textContent = progressData.eta ? `ETA: ${progressData.eta}` : '';
+                    } else if (progressData.status === 'completed') {
+                        // Téléchargement terminé
+                        eventSource.close();
+                        document.getElementById('progressBar').style.width = '100%';
+                        document.getElementById('progressPercent').textContent = '100%';
+                        document.getElementById('progressSection').style.display = 'none';
+
+                        // Afficher les infos de téléchargement
+                        currentFilename = progressData.filename;
+                        const sizeMB = (progressData.size / (1024 * 1024)).toFixed(2);
+
+                        document.getElementById('downloadInfo').innerHTML = `
+                            <strong>✅ Téléchargement terminé !</strong><br>
+                            Fichier: ${progressData.filename}<br>
+                            Taille: ${sizeMB} MB<br>
+                            ${progressData.audio_only ? '🎵 Mode: Audio seulement<br>' : ''}
+                            Format utilisé: ${progressData.format_used}<br>
+                            Codec audio: ${progressData.audio_codec}<br>
+                            Bitrate audio: ${progressData.audio_bitrate}<br>
+                            Post-processing: ${progressData.postproc_applied ? 'Oui' : 'Non (copy direct)'}
+                        `;
+
+                        document.getElementById('commandDisplay').innerHTML = `
+                            <div class="command-label">📋 Commande exécutée :</div>
+                            ${progressData.command}
+                        `;
+
+                        document.getElementById('downloadSection').style.display = 'block';
+                        showStatus('Vidéo téléchargée avec succès !', 'success');
+                        downloadBtn.disabled = false;
+                    } else if (progressData.status === 'error') {
+                        // Erreur de téléchargement
+                        eventSource.close();
+                        document.getElementById('progressSection').style.display = 'none';
+                        showStatus(progressData.error || 'Erreur lors du téléchargement', 'error');
+                        downloadBtn.disabled = false;
+                    }
+                };
+
+                eventSource.onerror = function() {
+                    eventSource.close();
+                    showStatus('Erreur de connexion au serveur', 'error');
+                    downloadBtn.disabled = false;
+                    document.getElementById('progressSection').style.display = 'none';
+                };
+
             } catch (error) {
                 showStatus(error.message, 'error');
-            } finally {
                 downloadBtn.disabled = false;
                 showLoading(false);
             }
