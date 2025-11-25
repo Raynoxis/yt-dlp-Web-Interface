@@ -1,21 +1,41 @@
 # 🎬 yt-dlp Web Interface
 
-Interface web pour télécharger des vidéos YouTube, avec options de conversion et affichage détaillé. Utilise l'excellent [yt-dlp](https://github.com/yt-dlp/yt-dlp). Le tout conteneurisé avec Docker/Podman. Codé avec mon ami : Claude AI
+Interface web moderne et sécurisée pour télécharger des vidéos YouTube, avec options de conversion et affichage détaillé. Utilise l'excellent [yt-dlp](https://github.com/yt-dlp/yt-dlp). Le tout conteneurisé avec Docker/Podman. Codé avec mon ami : Claude AI
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11-blue.svg)
+![Security](https://img.shields.io/badge/security-hardened-green.svg)
 
 ## ✨ Fonctionnalités
 
+### 🎥 Téléchargement
 - 🔍 **Analyse complète** des formats vidéo et audio disponibles
 - 🎯 **Sélection précise** des formats (qualité, codec, bitrate)
 - ⚙️ **Options de sortie** personnalisables (MP4, MKV, WebM)
 - 🎵 **Transcodage audio** (AAC, MP3, Opus) avec contrôle du bitrate
+- 🎵 **Mode audio seulement** pour extraire uniquement l'audio
+
+### 📊 Interface & UX
 - 📦 **Interface moderne** et responsive
+- 📈 **Barre de progression en temps réel** avec SSE (Server-Sent Events)
+- ⚡ **Téléchargements non-bloquants** - multiples téléchargements simultanés
+- 💨 **Vitesse et ETA** affichés pendant le téléchargement
+- 📋 **Affichage de la commande** yt-dlp exécutée pour transparence
+
+### 🔒 Sécurité
+- ✅ **Validation stricte des URLs** YouTube (protection contre injection de commandes)
+- 🛡️ **Protection path traversal** sécurisée
+- 👤 **Container non-root** (exécution en tant qu'utilisateur `appuser`)
+- 🔐 **Validation des inputs** (conteneurs, codecs, bitrate)
+- 🔍 **Logging complet** pour audit et debugging
+
+### 🚀 Performance & Fiabilité
+- 🆔 **Sessions UUID isolées** - pas de conflit entre téléchargements
+- 🧹 **Nettoyage automatique** des fichiers anciens (>1h)
+- 🔄 **Healthcheck intégré** pour monitoring
+- 📝 **Logs détaillés** avec rotation automatique
 - 🐳 **Conteneurisé** pour un déploiement facile
-- 🧹 **Nettoyage automatique** des fichiers entre les téléchargements
-- 📋 **Affichage de la commande** exécutée pour transparence
 
 ## 🚀 Démarrage rapide
 
@@ -27,18 +47,18 @@ docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 
 ### Avec Podman
 ```bash
-podman pull raynoxis/yt-dlp-web-interface:latest
+podman pull docker.io/raynoxis/yt-dlp-web-interface:latest
 podman run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```
 
-### Avec Docker Compose
+### Avec Docker Compose (Recommandé)
 ```bash
 git clone https://github.com/Raynoxis/yt-dlp-Web-Interface.git
 cd yt-dlp-Web-Interface
 docker-compose up -d
 ```
 
-Accédez à l'interface : **http://localhost:5000**
+Accédez à l'interface : **http://localhost:5001** (ou 5000 si vous utilisez la commande docker run directe)
 
 ## 📖 Documentation
 
@@ -64,20 +84,21 @@ docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 ## 🎯 Utilisation
 
 1. Collez l'URL d'une vidéo YouTube
-2. Cliquez sur "Analyser la vidéo"
+2. Cliquez sur **"Analyser la vidéo"**
 3. Sélectionnez les formats vidéo et audio souhaités
 4. Choisissez les options de sortie (conteneur, codec audio, bitrate)
-5. Cliquez sur "Télécharger"
-6. Téléchargez le fichier généré
+5. Cliquez sur **"Télécharger"**
+6. **Suivez la progression en temps réel** avec la barre de progression
+7. Téléchargez le fichier généré
 
 ## 📸 Screenshots
-### Etape 1
+### Etape 1 - Analyse
 ![Etape 1](docs/screenshots/step1.png)
 
-### Etape 2
+### Etape 2 - Sélection des formats
 ![Etape 2](docs/screenshots/step2.png)
 
-### Etape 3
+### Etape 3 - Téléchargement avec progression
 ![Etape 3](docs/screenshots/step3.png)
 
 ## 🔧 Configuration avancée
@@ -96,12 +117,13 @@ docker run -d \
 docker run -d \
   -p 5000:5000 \
   -e FLASK_ENV=production \
+  -e PYTHONUNBUFFERED=1 \
   --name ytdlp-web \
   raynoxis/yt-dlp-web-interface:latest
 ```
 
-### Compose
-```bash
+### Compose complet
+```yaml
 version: '3.8'
 
 services:
@@ -109,7 +131,7 @@ services:
     image: raynoxis/yt-dlp-web-interface:latest
     container_name: ytdlp-webinterface
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./downloads:/app/downloads
     restart: unless-stopped
@@ -124,6 +146,122 @@ services:
       start_period: 40s
 ```
 
+## 🔐 Sécurité
+
+### Mesures de sécurité implémentées
+
+- ✅ **Validation stricte** : Seules les URLs YouTube valides sont acceptées
+- ✅ **Protection injection** : Validation des inputs avant exécution
+- ✅ **Path traversal** : Protection contre l'accès à des fichiers non autorisés
+- ✅ **Isolation** : Chaque téléchargement dans un répertoire UUID unique
+- ✅ **Non-root** : Le container s'exécute avec un utilisateur non-privilégié
+- ✅ **Logging** : Tous les événements sont tracés pour audit
+- ✅ **Nettoyage** : Suppression automatique des fichiers après 1 heure
+
+### Bonnes pratiques recommandées
+
+```bash
+# Utiliser un reverse proxy avec SSL/TLS
+# Limiter l'accès par IP avec un firewall
+# Configurer des limites de ressources sur le container
+docker run -d \
+  --memory="2g" \
+  --cpus="1.0" \
+  -p 5000:5000 \
+  raynoxis/yt-dlp-web-interface:latest
+```
+
+## 📊 API Endpoints
+
+### Analyse de vidéo
+```bash
+POST /api/analyze
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=VIDEO_ID"
+}
+```
+
+### Téléchargement
+```bash
+POST /api/download
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "video_format": "299",
+  "audio_format": "140",
+  "output_container": "mp4",
+  "audio_codec": "aac",
+  "audio_bitrate": "192k",
+  "audio_only": false
+}
+```
+
+### Progression en temps réel (SSE)
+```bash
+GET /api/progress/<session_id>
+```
+
+### Télécharger le fichier
+```bash
+GET /api/download-file/<session_id>/<filename>
+```
+
+### Nettoyage
+```bash
+POST /api/cleanup/<session_id>
+POST /api/cleanup-all
+```
+
+## 🗂️ Architecture
+
+```
+yt-dlp-Web-Interface/
+├── app.py                     # Backend Flask avec SSE
+├── templates/
+│   └── index.html            # Frontend avec progress bar
+├── downloads/                # Fichiers téléchargés (UUID sessions)
+│   ├── <uuid-session-1>/
+│   └── <uuid-session-2>/
+├── Dockerfile                # Image Docker (non-root)
+├── docker-compose.yml        # Configuration Compose
+└── docs/                     # Documentation
+```
+
+## 🔄 Gestion des fichiers
+
+### Nettoyage automatique
+- **Déclenchement** : À chaque nouveau téléchargement
+- **Rétention** : 1 heure par défaut
+- **Action** : Suppression des répertoires de session > 1h
+
+### Nettoyage manuel
+```bash
+# Nettoyer une session spécifique
+curl -X POST http://localhost:5000/api/cleanup/<session_id>
+
+# Nettoyer toutes les sessions
+curl -X POST http://localhost:5000/api/cleanup-all
+```
+
+## 🐛 Dépannage
+
+### Les téléchargements échouent
+- Vérifiez que l'URL YouTube est valide
+- Certains formats peuvent ne pas être disponibles
+- Consultez les logs : `docker logs ytdlp-web`
+
+### Erreur de permissions
+```bash
+# Avec Podman, ajuster les permissions du volume
+podman unshare chown -R 1000:1000 downloads/
+```
+
+### Le healthcheck échoue
+- Attendez 40 secondes (start_period)
+- Vérifiez que le port 5000 est accessible
 
 ## 🤝 Contribution
 
@@ -144,6 +282,24 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Le meilleur outil de téléchargement vidéo
 - [Flask](https://flask.palletsprojects.com/) - Framework web Python
 - [FFmpeg](https://ffmpeg.org/) - Traitement vidéo et audio
+- [Claude AI](https://claude.ai) - Assistant de développement
+
+## 📈 Changelog
+
+### v2.0.0 (2025-11-25)
+- ✨ Ajout de la barre de progression en temps réel avec SSE
+- 🔒 Amélioration majeure de la sécurité (validation URL, path traversal)
+- 🆔 Sessions UUID isolées pour téléchargements concurrents
+- 👤 Container non-root pour meilleure sécurité
+- 📝 Logging complet pour audit et debugging
+- ⚡ Téléchargements non-bloquants avec threads
+- 🧹 Nettoyage automatique des sessions anciennes
+
+### v1.0.0 (Initial)
+- 🎬 Interface web pour yt-dlp
+- 🎯 Sélection de formats vidéo/audio
+- 🎵 Mode audio seulement
+- 🐳 Conteneurisation Docker/Podman
 
 ## ⚠️ Avertissement
 
