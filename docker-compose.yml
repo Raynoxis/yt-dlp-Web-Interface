@@ -4,11 +4,10 @@ services:
   ytdlp-webinterface:
     image: raynoxis/yt-dlp-web-interface:latest
     container_name: ytdlp-webinterface
-    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "5001:5000"
     volumes:
-      - ./downloads:/app/downloads
+      - ./downloads:/app/downloads:Z
     restart: unless-stopped
     environment:
       - FLASK_ENV=production

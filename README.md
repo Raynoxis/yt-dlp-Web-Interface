@@ -55,10 +55,16 @@ podman run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface:latest
 ```bash
 git clone https://github.com/Raynoxis/yt-dlp-Web-Interface.git
 cd yt-dlp-Web-Interface
+
+# Pour Docker
 docker-compose up -d
+
+# Pour Podman (rootless)
+./fix-permissions.sh  # Configure les permissions
+podman compose up -d
 ```
 
-**Note pour WSL2** : Un fichier `.env` est inclus pour éviter les problèmes de permissions. Le conteneur s'exécutera avec votre UID/GID au lieu de root.
+**Note pour WSL2 & Podman** : Un script `fix-permissions.sh` est fourni pour configurer automatiquement les permissions du dossier downloads avec Podman rootless.
 
 Accédez à l'interface : **http://localhost:5001** (ou 5000 si vous utilisez la commande docker run directe)
 
@@ -311,11 +317,22 @@ N'ajoutez **JAMAIS** `user: root` dans docker-compose.yml :
 - ❌ Fichiers téléchargés appartiennent à root
 - ❌ Vous ne pouvez pas les supprimer sans sudo
 
-### Erreur de permissions avec Podman
+### Erreur de permissions avec Podman (rootless)
+Podman en mode rootless utilise un mapping d'UID. Pour que le conteneur puisse écrire dans le dossier downloads :
+
 ```bash
-# Avec Podman, ajuster les permissions du volume
-podman unshare chown -R 1000:1000 downloads/
+# Utiliser le script fourni (recommandé)
+./fix-permissions.sh
+
+# OU manuellement :
+podman unshare chown 1000:1000 downloads/
+podman unshare chmod 755 downloads/
+
+# Puis démarrer le conteneur
+podman compose up -d
 ```
+
+**Explication** : Podman mappe l'UID 1000 du conteneur (appuser) vers l'UID 100999 sur l'hôte. Le script configure automatiquement cette permission.
 
 ### Le healthcheck échoue
 - Attendez 40 secondes (start_period)
@@ -343,6 +360,15 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - [Claude AI](https://claude.ai) - Assistant de développement
 
 ## 📈 Changelog
+
+### v2.0.2 (2025-11-28)
+- 🐛 Fix permissions issues with Podman rootless mode
+- 📝 Add `fix-permissions.sh` script for easy setup
+- 🔧 Update Dockerfile to not pre-create downloads folder
+- 📚 Improve documentation for Podman users
+
+### v2.0.1 (2025-11-27)
+- 📝 Update documentation with WSL2 permissions fix
 
 ### v2.0.0 (2025-11-25)
 - ✨ Ajout de la barre de progression en temps réel avec SSE

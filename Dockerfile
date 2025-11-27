@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir flask
 
 # Création d'un utilisateur non-root
 RUN useradd -m -u 1000 appuser && \
-    mkdir -p /app/downloads /app/templates && \
+    mkdir -p /app/templates && \
     chown -R appuser:appuser /app
 
 # Création des répertoires
