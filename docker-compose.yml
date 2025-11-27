@@ -4,6 +4,7 @@ services:
   ytdlp-webinterface:
     image: raynoxis/yt-dlp-web-interface:latest
     container_name: ytdlp-webinterface
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "5001:5000"
     volumes:

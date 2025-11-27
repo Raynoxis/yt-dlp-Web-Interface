@@ -58,6 +58,8 @@ cd yt-dlp-Web-Interface
 docker-compose up -d
 ```
 
+**Note pour WSL2** : Un fichier `.env` est inclus pour éviter les problèmes de permissions. Le conteneur s'exécutera avec votre UID/GID au lieu de root.
+
 Accédez à l'interface : **http://localhost:5001** (ou 5000 si vous utilisez la commande docker run directe)
 
 ## 📖 Documentation
@@ -130,6 +132,7 @@ services:
   ytdlp-webinterface:
     image: raynoxis/yt-dlp-web-interface:latest
     container_name: ytdlp-webinterface
+    user: "${UID:-1000}:${GID:-1000}"  # Exécute avec votre UID/GID
     ports:
       - "5001:5000"
     volumes:
@@ -144,6 +147,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+```
+
+**Créer un fichier `.env`** pour définir UID/GID :
+```bash
+echo "UID=$(id -u)" > .env
+echo "GID=$(id -g)" >> .env
 ```
 
 ## 🔐 Sécurité
@@ -253,7 +262,56 @@ curl -X POST http://localhost:5000/api/cleanup-all
 - Certains formats peuvent ne pas être disponibles
 - Consultez les logs : `docker logs ytdlp-web`
 
-### Erreur de permissions
+### Erreur de permissions (WSL2 / Linux)
+
+**Symptôme** : Erreur serveur 500 lors du téléchargement, ou le conteneur ne démarre pas.
+
+**Cause** : Le répertoire `downloads` appartient à un autre utilisateur (souvent créé par un conteneur root).
+
+**Solutions** :
+
+#### ✅ Solution 1 : Utiliser le fichier .env (Recommandé)
+Le fichier `.env` est déjà fourni dans le dépôt. Il configure le conteneur pour s'exécuter avec votre UID/GID :
+
+```bash
+# Le fichier .env contient :
+UID=1000
+GID=1000
+
+# Démarrez simplement avec docker-compose
+docker-compose up -d
+```
+
+#### ✅ Solution 2 : Recréer le répertoire downloads
+Si le répertoire a de mauvaises permissions :
+
+```bash
+# Renommer l'ancien répertoire
+mv downloads downloads.old
+
+# Créer un nouveau répertoire avec les bonnes permissions
+mkdir downloads
+
+# Relancer le conteneur
+docker-compose up -d
+```
+
+#### ✅ Solution 3 : Corriger les permissions (si vous avez sudo)
+```bash
+# Donner la propriété à votre utilisateur
+sudo chown -R $(id -u):$(id -g) downloads/
+
+# Relancer le conteneur
+docker-compose up -d
+```
+
+#### ❌ À ÉVITER : user: root
+N'ajoutez **JAMAIS** `user: root` dans docker-compose.yml :
+- ❌ Risque de sécurité majeur
+- ❌ Fichiers téléchargés appartiennent à root
+- ❌ Vous ne pouvez pas les supprimer sans sudo
+
+### Erreur de permissions avec Podman
 ```bash
 # Avec Podman, ajuster les permissions du volume
 podman unshare chown -R 1000:1000 downloads/
