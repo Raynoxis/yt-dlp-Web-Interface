@@ -302,6 +302,46 @@
             margin: 0 5px;
         }
 
+        .footer {
+            max-width: 900px;
+            margin: 24px auto 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .footer a {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.18);
+            color: #fff;
+            text-decoration: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(4px);
+        }
+
+        .footer a:hover {
+            background: rgba(0, 0, 0, 0.28);
+            transform: translateY(-1px);
+            transition: all 0.2s ease;
+        }
+
+        .footer img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            object-fit: cover;
+        }
+
+        .footer span {
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
         @media (max-width: 768px) {
             .format-row,
             .output-options {
@@ -426,6 +466,13 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div class="footer">
+        <a href="https://www.youtube.com/@Raynoxis" target="_blank" rel="noreferrer">
+            <img src="https://yt3.googleusercontent.com/QWhV5h8aevOT-vQkxpBIlLbvFIg19hS3HCBKQtKsRMHbp2opxUra0xMPmB1pkMBM2i2Y6NFNN9M=s160-c-k-c0x00ffffff-no-rj" alt="Raynoxis YouTube avatar" loading="lazy">
+            <span>Raynoxis · YouTube</span>
+        </a>
     </div>
 
     <script>
