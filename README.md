@@ -62,42 +62,6 @@ docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 3. Click **Download** and follow live progress (speed, ETA, executed yt-dlp command).
 4. Download the generated file when it completes.
 
-### API (if you automate)
-```bash
-POST /api/analyze
-{ "url": "https://www.youtube.com/watch?v=VIDEO_ID" }
-
-POST /api/download
-{
-  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
-  "video_format": "299",
-  "audio_format": "140",
-  "output_container": "mp4",
-  "audio_codec": "aac",
-  "audio_bitrate": "192k",
-  "audio_only": false
-}
-
-GET  /api/progress/<session_id>
-GET  /api/download-file/<session_id>/<filename>
-POST /api/cleanup/<session_id>
-POST /api/cleanup-all
-```
-
-### Permissions tips
-- Keep the container non-root (default). Do not set `user: root`.
-- If `downloads/` was created by root, recreate it or `chown` it to your user.
-- On Podman rootless, run `./fix-permissions.sh` (or `podman unshare chown 1000:1000 downloads/`) if you hit permission errors.
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-
-1. Fork the project
-2. Create a branch (`git checkout -b feature/improvement`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push the branch (`git push origin feature/improvement`)
-5. Open a Pull Request
 
 ## 📝 License
 
