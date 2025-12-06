@@ -7,7 +7,7 @@ services:
     ports:
       - "5001:5000"
     volumes:
-      - ./downloads:/app/downloads:Z
+      - /tmp:/app/downloads
     restart: unless-stopped
     environment:
       - FLASK_ENV=production
