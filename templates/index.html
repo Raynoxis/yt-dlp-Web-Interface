@@ -342,6 +342,39 @@
             letter-spacing: 0.2px;
         }
 
+        .lang-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px;
+            border-radius: 20px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .format-row,
             .output-options {
@@ -353,23 +386,27 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="lang-toggle">
+                <button class="lang-btn active" id="langFr" onclick="setLanguage('fr')">FR</button>
+                <button class="lang-btn" id="langEn" onclick="setLanguage('en')">EN</button>
+            </div>
             <h1>🎬 yt-dlp Web Interface</h1>
-            <p>Téléchargez des vidéos YouTube en haute qualité</p>
+            <p data-i18n="subtitle">Téléchargez des vidéos YouTube en haute qualité</p>
         </div>
 
         <div class="content">
             <div class="status" id="status"></div>
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Chargement en cours...</p>
+                <p data-i18n="loading">Chargement en cours...</p>
             </div>
 
             <div class="section">
                 <div class="input-group">
-                    <label for="url">URL de la vidéo YouTube</label>
+                    <label for="url" data-i18n="urlLabel">URL de la vidéo YouTube</label>
                     <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=EBwD0RPO1IM">
                 </div>
-                <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeVideo()">
+                <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeVideo()" data-i18n="analyzeBtn">
                     🔍 Analyser la vidéo
                 </button>
             </div>
@@ -381,36 +418,36 @@
 
             <div class="formats-section" id="formatsSection">
                 <div class="section">
-                    <div class="section-title">📹 Sélection des formats</div>
-                    
+                    <div class="section-title" data-i18n="formatSelection">📹 Sélection des formats</div>
+
                     <div class="input-group">
                         <label>
                             <input type="checkbox" id="audioOnlyMode" onchange="toggleAudioOnlyMode()">
-                            🎵 Mode Audio Seulement
+                            <span data-i18n="audioOnlyMode">🎵 Mode Audio Seulement</span>
                         </label>
                     </div>
-                    
+
                     <div class="format-row">
                         <div class="input-group" id="videoFormatGroup">
-                            <label for="videoFormat">Format Vidéo</label>
+                            <label for="videoFormat" data-i18n="videoFormat">Format Vidéo</label>
                             <select id="videoFormat">
-                                <option value="">Meilleure qualité auto</option>
+                                <option value="" data-i18n="bestQualityAuto">Meilleure qualité auto</option>
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="audioFormat">Format Audio</label>
+                            <label for="audioFormat" data-i18n="audioFormat">Format Audio</label>
                             <select id="audioFormat">
-                                <option value="">Meilleure qualité auto</option>
+                                <option value="" data-i18n="bestQualityAuto">Meilleure qualité auto</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <div class="section-title">⚙️ Options de sortie</div>
+                    <div class="section-title" data-i18n="outputOptions">⚙️ Options de sortie</div>
                     <div class="output-options">
                         <div class="input-group" id="outputContainerGroup">
-                            <label for="outputContainer">Conteneur</label>
+                            <label for="outputContainer" data-i18n="container">Conteneur</label>
                             <select id="outputContainer">
                                 <option value="mp4" selected>MP4</option>
                                 <option value="mkv">MKV</option>
@@ -420,16 +457,16 @@
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="audioCodec">Codec Audio</label>
+                            <label for="audioCodec" data-i18n="audioCodec">Codec Audio</label>
                             <select id="audioCodec" onchange="toggleBitrateInput()">
                                 <option value="aac" selected>AAC</option>
                                 <option value="mp3">MP3</option>
                                 <option value="opus">Opus</option>
-                                <option value="copy">Copy (original)</option>
+                                <option value="copy" data-i18n="copyOriginal">Copy (original)</option>
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="audioBitrate">Bitrate Audio</label>
+                            <label for="audioBitrate" data-i18n="audioBitrate">Bitrate Audio</label>
                             <select id="audioBitrate">
                                 <option value="128k">128 kbps</option>
                                 <option value="192k" selected>192 kbps</option>
@@ -440,14 +477,14 @@
                     </div>
                 </div>
 
-                <button class="btn btn-success" id="downloadBtn" onclick="downloadVideo()">
+                <button class="btn btn-success" id="downloadBtn" onclick="downloadVideo()" data-i18n="downloadBtn">
                     ⬇️ Télécharger
                 </button>
             </div>
 
             <!-- Progress Bar -->
             <div class="progress-section" id="progressSection" style="display: none;">
-                <h3>📥 Téléchargement en cours...</h3>
+                <h3 data-i18n="downloadInProgress">📥 Téléchargement en cours...</h3>
                 <div class="progress-bar-container">
                     <div class="progress-bar" id="progressBar" style="width: 0%"></div>
                 </div>
@@ -461,7 +498,7 @@
             <div class="download-section" id="downloadSection">
                 <div class="download-info" id="downloadInfo"></div>
                 <div class="command-display" id="commandDisplay"></div>
-                <button class="btn btn-success" id="downloadFileBtn" onclick="downloadFile()">
+                <button class="btn btn-success" id="downloadFileBtn" onclick="downloadFile()" data-i18n="downloadFileBtn">
                     💾 Télécharger le fichier
                 </button>
             </div>
@@ -478,6 +515,108 @@
     <script>
         let currentFilename = '';
         let currentSessionId = '';
+        let currentLang = localStorage.getItem('lang') || 'fr';
+
+        const translations = {
+            fr: {
+                subtitle: 'Téléchargez des vidéos YouTube en haute qualité',
+                loading: 'Chargement en cours...',
+                urlLabel: 'URL de la vidéo YouTube',
+                analyzeBtn: '🔍 Analyser la vidéo',
+                formatSelection: '📹 Sélection des formats',
+                audioOnlyMode: '🎵 Mode Audio Seulement',
+                videoFormat: 'Format Vidéo',
+                audioFormat: 'Format Audio',
+                bestQualityAuto: 'Meilleure qualité auto',
+                outputOptions: '⚙️ Options de sortie',
+                container: 'Conteneur',
+                audioOutputFormat: 'Format Audio de sortie',
+                audioCodec: 'Codec Audio',
+                audioCodecManaged: 'Codec Audio (géré par format)',
+                copyOriginal: 'Copy (original)',
+                audioBitrate: 'Bitrate Audio',
+                downloadBtn: '⬇️ Télécharger',
+                downloadInProgress: '📥 Téléchargement en cours...',
+                downloadFileBtn: '💾 Télécharger le fichier',
+                enterUrl: 'Veuillez entrer une URL YouTube',
+                analysisError: "Erreur lors de l'analyse",
+                analysisSuccess: 'Analyse terminée avec succès !',
+                downloadError: 'Erreur lors du téléchargement',
+                downloadSuccess: 'Vidéo téléchargée avec succès !',
+                serverError: 'Erreur de connexion au serveur',
+                downloadComplete: '✅ Téléchargement terminé !',
+                file: 'Fichier',
+                size: 'Taille',
+                audioOnlyModeLabel: '🎵 Mode: Audio seulement',
+                formatUsed: 'Format utilisé',
+                audioCodecUsed: 'Codec audio',
+                audioBitrateUsed: 'Bitrate audio',
+                postProcessing: 'Post-processing',
+                yes: 'Oui',
+                noCopyDirect: 'Non (copy direct)',
+                commandExecuted: '📋 Commande exécutée :'
+            },
+            en: {
+                subtitle: 'Download YouTube videos in high quality',
+                loading: 'Loading...',
+                urlLabel: 'YouTube Video URL',
+                analyzeBtn: '🔍 Analyze Video',
+                formatSelection: '📹 Format Selection',
+                audioOnlyMode: '🎵 Audio Only Mode',
+                videoFormat: 'Video Format',
+                audioFormat: 'Audio Format',
+                bestQualityAuto: 'Best quality auto',
+                outputOptions: '⚙️ Output Options',
+                container: 'Container',
+                audioOutputFormat: 'Audio Output Format',
+                audioCodec: 'Audio Codec',
+                audioCodecManaged: 'Audio Codec (managed by format)',
+                copyOriginal: 'Copy (original)',
+                audioBitrate: 'Audio Bitrate',
+                downloadBtn: '⬇️ Download',
+                downloadInProgress: '📥 Downloading...',
+                downloadFileBtn: '💾 Download File',
+                enterUrl: 'Please enter a YouTube URL',
+                analysisError: 'Error during analysis',
+                analysisSuccess: 'Analysis completed successfully!',
+                downloadError: 'Error during download',
+                downloadSuccess: 'Video downloaded successfully!',
+                serverError: 'Server connection error',
+                downloadComplete: '✅ Download complete!',
+                file: 'File',
+                size: 'Size',
+                audioOnlyModeLabel: '🎵 Mode: Audio only',
+                formatUsed: 'Format used',
+                audioCodecUsed: 'Audio codec',
+                audioBitrateUsed: 'Audio bitrate',
+                postProcessing: 'Post-processing',
+                yes: 'Yes',
+                noCopyDirect: 'No (direct copy)',
+                commandExecuted: '📋 Command executed:'
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            document.getElementById('langFr').classList.toggle('active', lang === 'fr');
+            document.getElementById('langEn').classList.toggle('active', lang === 'en');
+            document.documentElement.lang = lang;
+            applyTranslations();
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+        }
+
+        function t(key) {
+            return translations[currentLang][key] || key;
+        }
 
         function toggleAudioOnlyMode() {
             const audioOnly = document.getElementById('audioOnlyMode').checked;
@@ -506,14 +645,14 @@
                     <option value="wav">WAV</option>
                     <option value="best">Best (auto)</option>
                 `;
-                outputLabel.innerHTML = 'Format Audio de sortie';
+                outputLabel.textContent = t('audioOutputFormat');
                 
                 // Le codec devient moins pertinent en mode audio-only (géré par --audio-format)
                 audioCodec.disabled = true;
                 audioCodec.style.opacity = '0.5';
                 audioCodec.style.cursor = 'not-allowed';
                 audioCodecLabel.style.opacity = '0.5';
-                audioCodecLabel.innerHTML = 'Codec Audio (géré par format)';
+                audioCodecLabel.textContent = t('audioCodecManaged');
             } else {
                 // Réactiver le format vidéo
                 videoFormat.disabled = false;
@@ -527,14 +666,14 @@
                     <option value="mkv">MKV</option>
                     <option value="webm">WebM</option>
                 `;
-                outputLabel.innerHTML = 'Conteneur';
+                outputLabel.textContent = t('container');
                 
                 // Réactiver le codec audio
                 audioCodec.disabled = false;
                 audioCodec.style.opacity = '1';
                 audioCodec.style.cursor = 'pointer';
                 audioCodecLabel.style.opacity = '1';
-                audioCodecLabel.innerHTML = 'Codec Audio';
+                audioCodecLabel.textContent = t('audioCodec');
             }
             
             // Toujours permettre le contrôle du bitrate
@@ -577,7 +716,7 @@
             const url = document.getElementById('url').value.trim();
             
             if (!url) {
-                showStatus('Veuillez entrer une URL YouTube', 'error');
+                showStatus(t('enterUrl'), 'error');
                 return;
             }
 
@@ -597,7 +736,7 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Erreur lors de l\'analyse');
+                    throw new Error(data.error || t('analysisError'));
                 }
 
                 // Affichage des informations vidéo
@@ -607,7 +746,7 @@
 
                 // Remplissage des formats vidéo
                 const videoSelect = document.getElementById('videoFormat');
-                videoSelect.innerHTML = '<option value="">Meilleure qualité auto</option>';
+                videoSelect.innerHTML = `<option value="">${t('bestQualityAuto')}</option>`;
                 data.video_formats.forEach(fmt => {
                     const option = document.createElement('option');
                     option.value = fmt.id;
@@ -617,7 +756,7 @@
 
                 // Remplissage des formats audio
                 const audioSelect = document.getElementById('audioFormat');
-                audioSelect.innerHTML = '<option value="">Meilleure qualité auto</option>';
+                audioSelect.innerHTML = `<option value="">${t('bestQualityAuto')}</option>`;
                 data.audio_formats.forEach(fmt => {
                     const option = document.createElement('option');
                     option.value = fmt.id;
@@ -626,7 +765,7 @@
                 });
 
                 document.getElementById('formatsSection').style.display = 'block';
-                showStatus('Analyse terminée avec succès !', 'success');
+                showStatus(t('analysisSuccess'), 'success');
             } catch (error) {
                 showStatus(error.message, 'error');
             } finally {
@@ -669,7 +808,7 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Erreur lors du téléchargement');
+                    throw new Error(data.error || t('downloadError'));
                 }
 
                 // Récupérer le session_id et se connecter au SSE
@@ -702,36 +841,36 @@
                         const sizeMB = (progressData.size / (1024 * 1024)).toFixed(2);
 
                         document.getElementById('downloadInfo').innerHTML = `
-                            <strong>✅ Téléchargement terminé !</strong><br>
-                            Fichier: ${progressData.filename}<br>
-                            Taille: ${sizeMB} MB<br>
-                            ${progressData.audio_only ? '🎵 Mode: Audio seulement<br>' : ''}
-                            Format utilisé: ${progressData.format_used}<br>
-                            Codec audio: ${progressData.audio_codec}<br>
-                            Bitrate audio: ${progressData.audio_bitrate}<br>
-                            Post-processing: ${progressData.postproc_applied ? 'Oui' : 'Non (copy direct)'}
+                            <strong>${t('downloadComplete')}</strong><br>
+                            ${t('file')}: ${progressData.filename}<br>
+                            ${t('size')}: ${sizeMB} MB<br>
+                            ${progressData.audio_only ? t('audioOnlyModeLabel') + '<br>' : ''}
+                            ${t('formatUsed')}: ${progressData.format_used}<br>
+                            ${t('audioCodecUsed')}: ${progressData.audio_codec}<br>
+                            ${t('audioBitrateUsed')}: ${progressData.audio_bitrate}<br>
+                            ${t('postProcessing')}: ${progressData.postproc_applied ? t('yes') : t('noCopyDirect')}
                         `;
 
                         document.getElementById('commandDisplay').innerHTML = `
-                            <div class="command-label">📋 Commande exécutée :</div>
+                            <div class="command-label">${t('commandExecuted')}</div>
                             ${progressData.command}
                         `;
 
                         document.getElementById('downloadSection').style.display = 'block';
-                        showStatus('Vidéo téléchargée avec succès !', 'success');
+                        showStatus(t('downloadSuccess'), 'success');
                         downloadBtn.disabled = false;
                     } else if (progressData.status === 'error') {
                         // Erreur de téléchargement
                         eventSource.close();
                         document.getElementById('progressSection').style.display = 'none';
-                        showStatus(progressData.error || 'Erreur lors du téléchargement', 'error');
+                        showStatus(progressData.error || t('downloadError'), 'error');
                         downloadBtn.disabled = false;
                     }
                 };
 
                 eventSource.onerror = function() {
                     eventSource.close();
-                    showStatus('Erreur de connexion au serveur', 'error');
+                    showStatus(t('serverError'), 'error');
                     downloadBtn.disabled = false;
                     document.getElementById('progressSection').style.display = 'none';
                 };
@@ -756,8 +895,11 @@
             }
         });
 
-        // Initialiser l'état du bitrate au chargement
-        window.addEventListener('load', toggleBitrateInput);
+        // Initialiser l'état du bitrate et la langue au chargement
+        window.addEventListener('load', () => {
+            toggleBitrateInput();
+            setLanguage(currentLang);
+        });
     </script>
 </body>
 </html>
