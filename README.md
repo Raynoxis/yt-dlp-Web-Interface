@@ -55,8 +55,6 @@ docker run -d -p 5000:5000 --name ytdlp-web raynoxis/yt-dlp-web-interface
 ### Step 2 - Format selection
 ![Step 2](docs/screenshots/step2.png)
 
-### Step 3 - Download with progress
-![Step 3](docs/screenshots/step3.png)
 
 ## 🎯 How it works
 1. Paste a YouTube URL and click **Analyze video** to list available streams.
