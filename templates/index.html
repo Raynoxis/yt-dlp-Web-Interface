@@ -528,12 +528,13 @@
                 videoFormat: 'Format Vidéo',
                 audioFormat: 'Format Audio',
                 bestQualityAuto: 'Meilleure qualité auto',
+                bestAuto: 'Meilleur (auto)',
                 outputOptions: '⚙️ Options de sortie',
                 container: 'Conteneur',
                 audioOutputFormat: 'Format Audio de sortie',
                 audioCodec: 'Codec Audio',
                 audioCodecManaged: 'Codec Audio (géré par format)',
-                copyOriginal: 'Copy (original)',
+                copyOriginal: 'Copie (original)',
                 audioBitrate: 'Bitrate Audio',
                 downloadBtn: '⬇️ Télécharger',
                 downloadInProgress: '📥 Téléchargement en cours...',
@@ -553,7 +554,7 @@
                 audioBitrateUsed: 'Bitrate audio',
                 postProcessing: 'Post-processing',
                 yes: 'Oui',
-                noCopyDirect: 'Non (copy direct)',
+                noCopyDirect: 'Non (copie directe)',
                 commandExecuted: '📋 Commande exécutée :'
             },
             en: {
@@ -566,6 +567,7 @@
                 videoFormat: 'Video Format',
                 audioFormat: 'Audio Format',
                 bestQualityAuto: 'Best quality auto',
+                bestAuto: 'Best (auto)',
                 outputOptions: '⚙️ Output Options',
                 container: 'Container',
                 audioOutputFormat: 'Audio Output Format',
@@ -603,6 +605,45 @@
             document.getElementById('langEn').classList.toggle('active', lang === 'en');
             document.documentElement.lang = lang;
             applyTranslations();
+
+            // Rafraîchir les options dynamiques du mode audio-only si actif
+            const audioOnlyCheckbox = document.getElementById('audioOnlyMode');
+            if (audioOnlyCheckbox && audioOnlyCheckbox.checked) {
+                toggleAudioOnlyMode();
+            }
+
+            // Mettre à jour l'option "Meilleure qualité auto" dans les dropdowns de format
+            updateFormatDropdownsTranslations();
+        }
+
+        function updateFormatDropdownsTranslations() {
+            // Mettre à jour la première option des selects de format si elle contient la traduction
+            const videoSelect = document.getElementById('videoFormat');
+            const audioSelect = document.getElementById('audioFormat');
+
+            if (videoSelect && videoSelect.options.length > 0) {
+                const firstOption = videoSelect.options[0];
+                if (firstOption.value === '') {
+                    firstOption.textContent = t('bestQualityAuto');
+                }
+            }
+
+            if (audioSelect && audioSelect.options.length > 0) {
+                const firstOption = audioSelect.options[0];
+                if (firstOption.value === '') {
+                    firstOption.textContent = t('bestQualityAuto');
+                }
+            }
+
+            // Mettre à jour l'option "Copy (original)" dans le codec audio
+            const audioCodecSelect = document.getElementById('audioCodec');
+            if (audioCodecSelect) {
+                for (let option of audioCodecSelect.options) {
+                    if (option.value === 'copy') {
+                        option.textContent = t('copyOriginal');
+                    }
+                }
+            }
         }
 
         function applyTranslations() {
@@ -635,7 +676,7 @@
                 videoFormat.style.opacity = '0.5';
                 videoFormat.style.cursor = 'not-allowed';
                 videoLabel.style.opacity = '0.5';
-                
+
                 // Adapter le conteneur pour formats audio seulement
                 outputContainer.innerHTML = `
                     <option value="mp3" selected>MP3</option>
@@ -643,10 +684,10 @@
                     <option value="opus">Opus</option>
                     <option value="flac">FLAC</option>
                     <option value="wav">WAV</option>
-                    <option value="best">Best (auto)</option>
+                    <option value="best">${t('bestAuto')}</option>
                 `;
                 outputLabel.textContent = t('audioOutputFormat');
-                
+
                 // Le codec devient moins pertinent en mode audio-only (géré par --audio-format)
                 audioCodec.disabled = true;
                 audioCodec.style.opacity = '0.5';
@@ -659,7 +700,7 @@
                 videoFormat.style.opacity = '1';
                 videoFormat.style.cursor = 'pointer';
                 videoLabel.style.opacity = '1';
-                
+
                 // Rétablir les conteneurs vidéo
                 outputContainer.innerHTML = `
                     <option value="mp4" selected>MP4</option>
@@ -667,7 +708,7 @@
                     <option value="webm">WebM</option>
                 `;
                 outputLabel.textContent = t('container');
-                
+
                 // Réactiver le codec audio
                 audioCodec.disabled = false;
                 audioCodec.style.opacity = '1';
